@@ -6,14 +6,18 @@ environment:
     OS: win
     EXT: zip
     VCVARSALLPATH: C:\"Program Files\Microsoft Visual Studio"\2022\Community\VC\Auxiliary\Build\vcvars64.bat
+    APPVEYOR_RDP_PASSWORD:
+        secure: XDOulHbT+GnN6t+WhbRdIlxJThwnVnF5Tj+P7lIc/QA=
   - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2204
     QTVER: 6.4
     OS: linux
     EXT: tar.gz
+    APPVEYOR_SSH_KEY: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCnzgGEneZEeiFacT9D/oYW+LCBIiA8PPgv2i52a0z78Gin8q21WTmDB2xHj3u07MxPPyOVKQIrOGFZkQrKxbhyj9K19RTLq7vEu0Bh3ruEyGaoBmcU5B0LXwLfs4R3y9z+Hi5WNWrOMqYMR01L49oQrPwp9gv/OxDEpnYo05Q1xF2aGBghw2Ar1TihZ/68h1a3/XMaimlUgfU6gydHLDtsOCbiqusCLIJpDfdNzCE0H7Ht3yZa4LflTYk6ICy8gOddllDowmLRkZVKBMidTPfA0zkD+6hN3r0CuCZJZ70TtrFu95UpAYb03SQpMndZcUjyT+F15YNaokCfr/tNI5WdXICJdwOHJ0cu5VbcXEuCaUlOVmgGdRK09ZO2h9fOE6qAmQwV7ao1/AUPwoPVTTta1sRAl1k+J3PEjXU/b/sOndxTNwmlXN9bblUfHnrn1e9ts48NtnaMpyjhL2mnTKEoYlDQWezYQU/crqR31P62YLlNUK7VP5/vIsYP/9H+SmVKRi4gOuOdf3rOMwPDlYbdIPGLJ9SDCHWZyCEkYhAzzxW/zD+KB7KDAy3+MGosaAaBvbPWP7mHquVNX9nvNd4X75mRgq92Cm6SWkIeO47SVDovqP1PiR+K8gy+lYOSxF7vgksHMumJWEh3AMH3IGxLamaAsyKklWSNZ/jhjpFRUQ==
   - APPVEYOR_BUILD_WORKER_IMAGE: macos-monterey
     QTVER: 6.6
     OS: macOS
     EXT: tar.gz
+    APPVEYOR_SSH_KEY: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCnzgGEneZEeiFacT9D/oYW+LCBIiA8PPgv2i52a0z78Gin8q21WTmDB2xHj3u07MxPPyOVKQIrOGFZkQrKxbhyj9K19RTLq7vEu0Bh3ruEyGaoBmcU5B0LXwLfs4R3y9z+Hi5WNWrOMqYMR01L49oQrPwp9gv/OxDEpnYo05Q1xF2aGBghw2Ar1TihZ/68h1a3/XMaimlUgfU6gydHLDtsOCbiqusCLIJpDfdNzCE0H7Ht3yZa4LflTYk6ICy8gOddllDowmLRkZVKBMidTPfA0zkD+6hN3r0CuCZJZ70TtrFu95UpAYb03SQpMndZcUjyT+F15YNaokCfr/tNI5WdXICJdwOHJ0cu5VbcXEuCaUlOVmgGdRK09ZO2h9fOE6qAmQwV7ao1/AUPwoPVTTta1sRAl1k+J3PEjXU/b/sOndxTNwmlXN9bblUfHnrn1e9ts48NtnaMpyjhL2mnTKEoYlDQWezYQU/crqR31P62YLlNUK7VP5/vIsYP/9H+SmVKRi4gOuOdf3rOMwPDlYbdIPGLJ9SDCHWZyCEkYhAzzxW/zD+KB7KDAy3+MGosaAaBvbPWP7mHquVNX9nvNd4X75mRgq92Cm6SWkIeO47SVDovqP1PiR+K8gy+lYOSxF7vgksHMumJWEh3AMH3IGxLamaAsyKklWSNZ/jhjpFRUQ==
 
 install:
     - git submodule update --init
@@ -21,12 +25,15 @@ install:
 
 before_build:
     - cmd: set PATH=%QTPATH%\bin;%PATH%
+    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
     - cmd: call %VCVARSALLPATH%
 
 build_script:
     - mkdir build
     - cd build
     - cmd: cmake -G"NMake Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DTEST=ON ../
+    - sh: export APPVEYOR_SSH_BLOCK=true
+    - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
     - sh: bash ../.ci/build.sh
     - cmake --build . -j 4
     - ctest -V
