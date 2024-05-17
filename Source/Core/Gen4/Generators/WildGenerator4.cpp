@@ -19,6 +19,7 @@
 
 #include "WildGenerator4.hpp"
 #include <Core/Enum/Encounter.hpp>
+#include <Core/Enum/Game.hpp>
 #include <Core/Enum/Lead.hpp>
 #include <Core/Enum/Method.hpp>
 #include <Core/Gen4/States/WildState4.hpp>
@@ -202,6 +203,15 @@ std::vector<WildGeneratorState4> WildGenerator4::generateMethodJ(u32 seed) const
         if (slot.getSpecie() == 201)
         {
             form = area.unownForm(go.nextUShort());
+        }
+
+        if (area.getEncounter() == Encounter::Grass || area.getEncounter() == Encounter::Surfing)
+        {
+            occidentary += (profile.getVersion() & Game::Platinum) != Game::None ? 1 : 5;
+        }
+        else
+        {
+            occidentary += (profile.getVersion() & Game::Platinum) != Game::None ? 2 : 6;
         }
 
         WildGeneratorState4 state(rng.nextUShort(), occidentary, initialAdvances + cnt, pid, ivs, pid & 1, Utilities::getGender(pid, info),
@@ -438,6 +448,16 @@ std::vector<WildGeneratorState4> WildGenerator4::generateMethodK(u32 seed) const
                     form = unlockedUnown[go.nextUShort(unlockedUnown.size())];
                 }
             }
+        }
+
+        if (area.getEncounter() == Encounter::OldRod || area.getEncounter() == Encounter::GoodRod
+            || area.getEncounter() == Encounter::SuperRod)
+        {
+            occidentary += 2;
+        }
+        else
+        {
+            occidentary += 1;
         }
 
         WildGeneratorState4 state(rng.nextUShort(), occidentary, initialAdvances + cnt, pid, ivs, pid & 1, Utilities::getGender(pid, info),
